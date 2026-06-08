@@ -80,8 +80,13 @@ const uploadVendorInvoice = async (req, res, next) => {
         vendorInvoice.subtotal = parsed.subtotal || 0;
         vendorInvoice.taxAmount = parsed.taxAmount || 0;
         vendorInvoice.total = parsed.total || 0;
-        vendorInvoice.dueDate = parsed.dueDate ? new Date(parsed.dueDate) : null;
-        vendorInvoice.issueDate = parsed.issueDate ? new Date(parsed.issueDate) : null;
+        const issueDate = parsed.issueDate ? new Date(parsed.issueDate) : new Date();
+        vendorInvoice.issueDate = issueDate;
+
+        // Always default due date to 30 days from the invoice date
+        const defaultDue = new Date(issueDate);
+        defaultDue.setDate(defaultDue.getDate() + 30);
+        vendorInvoice.dueDate = defaultDue;
         vendorInvoice.parsedData = parsed;
         vendorInvoice.aiConfidence = parsed.confidence || 80;
         vendorInvoice.status = 'Pending';

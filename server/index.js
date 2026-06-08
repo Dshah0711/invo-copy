@@ -1,3 +1,4 @@
+// Trigger reload to load .env changes
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');

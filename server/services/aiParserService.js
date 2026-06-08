@@ -11,7 +11,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
  * @returns {object} Parsed invoice data as JSON
  */
 const parseVendorInvoice = async (filePath, fileType) => {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
   const fileBuffer = fs.readFileSync(filePath);
   const base64Data = fileBuffer.toString('base64');

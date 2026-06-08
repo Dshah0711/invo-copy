@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
-import { getVendorInvoices, uploadVendorInvoice, approveVendorInvoice, rejectVendorInvoice, markVendorPaid, getVendorInvoice } from '../services/api';
+import { getVendorInvoices, uploadVendorInvoice, approveVendorInvoice, rejectVendorInvoice, markVendorPaid, getVendorInvoice, updateVendorInvoice } from '../services/api';
 import Layout from '../components/Layout';
 import toast from 'react-hot-toast';
 
@@ -213,7 +213,25 @@ const PayablesPage = () => {
                   <div><p className="text-xs text-slate-500 uppercase tracking-wide">Invoice #</p><p className="text-slate-200">{detail.invoiceNumber || '—'}</p></div>
                   <div><p className="text-xs text-slate-500 uppercase tracking-wide">Email</p><p className="text-slate-200">{detail.vendorEmail || '—'}</p></div>
                   <div><p className="text-xs text-slate-500 uppercase tracking-wide">Phone</p><p className="text-slate-200">{detail.vendorPhone || '—'}</p></div>
-                  <div><p className="text-xs text-slate-500 uppercase tracking-wide">Due Date</p><p className="text-slate-200">{fmtDate(detail.dueDate)}</p></div>
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Due Date</p>
+                    <input
+                      type="date"
+                      value={detail.dueDate ? new Date(detail.dueDate).toISOString().split('T')[0] : ''}
+                      onChange={async (e) => {
+                        const newDate = e.target.value;
+                        try {
+                          const { data } = await updateVendorInvoice(detail._id, { dueDate: newDate });
+                          setDetail(data.data);
+                          setInvoices(prev => prev.map(inv => inv._id === detail._id ? { ...inv, dueDate: newDate } : inv));
+                          toast.success('Due date updated successfully');
+                        } catch {
+                          toast.error('Failed to update due date');
+                        }
+                      }}
+                      className="w-full bg-dark-700 text-slate-200 text-xs py-1.5 px-2 rounded-xl border border-dark-500 outline-none focus:border-primary-500 transition-all font-medium"
+                    />
+                  </div>
                   <div><p className="text-xs text-slate-500 uppercase tracking-wide">Total</p><p className="text-primary-400 font-bold text-base">{fmt(detail.total)}</p></div>
                 </div>
 

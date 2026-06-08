@@ -10,6 +10,7 @@ const NAV = [
   { to: '/invoices/new', icon: '✏️', label: 'New Invoice' },
   { to: '/payables', icon: '📥', label: 'Payables' },
   { to: '/clients', icon: '👥', label: 'Clients' },
+  { to: '/settings', icon: '⚙️', label: 'Settings' },
 ];
 
 const Sidebar = () => {
@@ -57,8 +58,11 @@ const Sidebar = () => {
       {/* User footer */}
       <div className="p-4 border-t border-dark-600">
         <div className="flex items-center gap-3 p-3 rounded-xl bg-dark-700 mb-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-violet-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-            {(user?.name || 'U').charAt(0).toUpperCase()}
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-violet-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0 overflow-hidden">
+            {user?.logo
+              ? <img src={user.logo} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              : (user?.name || 'U').charAt(0).toUpperCase()
+            }
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-slate-200 truncate">{user?.name}</p>

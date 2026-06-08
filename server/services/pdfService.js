@@ -113,7 +113,10 @@ const generateInvoiceHTML = (invoice, user, template = 'modern') => {
   <div class="page">
     <div class="header">
       <div class="brand">
-        <div class="brand-logo">${(user.company || user.name || 'I').charAt(0).toUpperCase()}</div>
+        ${user.logo
+          ? `<img src="${user.logo}" alt="logo" style="width:48px;height:48px;object-fit:contain;border-radius:10px;" />`
+          : `<div class="brand-logo">${(user.company || user.name || 'I').charAt(0).toUpperCase()}</div>`
+        }
         <div>
           <div class="brand-name">${user.company || user.name}</div>
           <div class="brand-tagline">${user.email}</div>

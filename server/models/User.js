@@ -60,6 +60,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: 'INV',
     },
+    paymentTerms: {
+      type: Number,
+      default: 30,
+    },
     invoiceCounter: {
       type: Number,
       default: 0,

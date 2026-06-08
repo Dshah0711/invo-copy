@@ -11,6 +11,7 @@ import NewInvoicePage from './pages/NewInvoicePage';
 import InvoiceDetailPage from './pages/InvoiceDetailPage';
 import PayablesPage from './pages/PayablesPage';
 import ClientsPage from './pages/ClientsPage';
+import SettingsPage from './pages/SettingsPage';
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
           <Route path="/invoices/:id/edit" element={<PrivateRoute><NewInvoicePage /></PrivateRoute>} />
           <Route path="/payables" element={<PrivateRoute><PayablesPage /></PrivateRoute>} />
           <Route path="/clients" element={<PrivateRoute><ClientsPage /></PrivateRoute>} />
+          <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
 
           {/* Redirect root */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />

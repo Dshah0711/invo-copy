@@ -64,6 +64,10 @@ const register = async (req, res, next) => {
         currency: user.currency,
         currencySymbol: user.currencySymbol,
         invoicePrefix: user.invoicePrefix,
+        paymentTerms: user.paymentTerms,
+        phone: user.phone,
+        address: user.address,
+        gstNumber: user.gstNumber,
       },
     });
   } catch (error) {
@@ -113,6 +117,7 @@ const login = async (req, res, next) => {
         currency: user.currency,
         currencySymbol: user.currencySymbol,
         invoicePrefix: user.invoicePrefix,
+        paymentTerms: user.paymentTerms,
         address: user.address,
         phone: user.phone,
         gstNumber: user.gstNumber,
@@ -185,7 +190,7 @@ const getMe = async (req, res, next) => {
 // @access  Private
 const updateProfile = async (req, res, next) => {
   try {
-    const { name, company, phone, gstNumber, currency, currencySymbol, invoicePrefix, address } = req.body;
+    const { name, company, phone, gstNumber, currency, currencySymbol, invoicePrefix, paymentTerms, address } = req.body;
 
     const updateData = {};
     if (name) updateData.name = name;
@@ -195,15 +200,38 @@ const updateProfile = async (req, res, next) => {
     if (currency) updateData.currency = currency;
     if (currencySymbol) updateData.currencySymbol = currencySymbol;
     if (invoicePrefix) updateData.invoicePrefix = invoicePrefix;
-    if (address) updateData.address = address;
-    if (req.file) updateData.logo = req.file.path; // Cloudinary URL or local path
+    if (paymentTerms !== undefined) updateData.paymentTerms = Number(paymentTerms);
+    if (address) {
+      try { updateData.address = typeof address === 'string' ? JSON.parse(address) : address; } catch { updateData.address = address; }
+    }
+    if (req.file) {
+      // Store as a public URL accessible from the client
+      updateData.logo = `http://localhost:5000/uploads/${req.file.filename}`;
+    }
 
     const user = await User.findByIdAndUpdate(req.user._id, updateData, {
       new: true,
       runValidators: true,
     });
 
-    res.json({ success: true, message: 'Profile updated successfully!', user });
+    res.json({
+      success: true,
+      message: 'Profile updated successfully!',
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        company: user.company,
+        logo: user.logo,
+        phone: user.phone,
+        address: user.address,
+        gstNumber: user.gstNumber,
+        currency: user.currency,
+        currencySymbol: user.currencySymbol,
+        invoicePrefix: user.invoicePrefix,
+        paymentTerms: user.paymentTerms,
+      },
+    });
   } catch (error) {
     next(error);
   }

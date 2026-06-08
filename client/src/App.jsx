@@ -12,6 +12,7 @@ import InvoiceDetailPage from './pages/InvoiceDetailPage';
 import PayablesPage from './pages/PayablesPage';
 import ClientsPage from './pages/ClientsPage';
 import SettingsPage from './pages/SettingsPage';
+import ExpensesPage from './pages/ExpensesPage';
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
           <Route path="/payables" element={<PrivateRoute><PayablesPage /></PrivateRoute>} />
           <Route path="/clients" element={<PrivateRoute><ClientsPage /></PrivateRoute>} />
           <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
+          <Route path="/expenses" element={<PrivateRoute><ExpensesPage /></PrivateRoute>} />
 
           {/* Redirect root */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />

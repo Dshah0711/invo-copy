@@ -10,6 +10,7 @@ const NAV = [
   { to: '/invoices/new', icon: '✏️', label: 'New Invoice' },
   { to: '/payables', icon: '📥', label: 'Payables' },
   { to: '/clients', icon: '👥', label: 'Clients' },
+  { to: '/expenses', icon: '💸', label: 'Expenses' },
   { to: '/settings', icon: '⚙️', label: 'Settings' },
 ];
 

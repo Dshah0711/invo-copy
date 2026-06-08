@@ -79,5 +79,14 @@ export const getTopClients = () => API.get('/analytics/top-clients');
 export const getStatusBreakdown = () => API.get('/analytics/status-breakdown');
 export const getNotifications = () => API.get('/analytics/notifications');
 export const markNotificationsRead = (ids) => API.patch('/analytics/notifications/read', { ids });
+export const getPnL = () => API.get('/analytics/pnl');
+
+// ─── Expenses ─────────────────────────────────────────────
+export const getExpenses = (params) => API.get('/expenses', { params });
+export const createExpense = (data) => API.post('/expenses', data);
+export const updateExpense = (id, data) => API.put(`/expenses/${id}`, data);
+export const deleteExpense = (id) => API.delete(`/expenses/${id}`);
+export const getExpenseCategories = () => API.get('/expenses/categories');
+export const getExpenseBreakdown = (params) => API.get('/expenses/breakdown', { params });
 
 export default API;

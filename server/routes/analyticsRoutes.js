@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   getSummary, getMonthlyData, getTopClients, getStatusBreakdown,
-  getNotifications, markNotificationsRead,
+  getNotifications, markNotificationsRead, getPnL,
 } = require('../controllers/analyticsController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -13,5 +13,6 @@ router.get('/top-clients', getTopClients);
 router.get('/status-breakdown', getStatusBreakdown);
 router.get('/notifications', getNotifications);
 router.patch('/notifications/read', markNotificationsRead);
+router.get('/pnl', getPnL);
 
 module.exports = router;

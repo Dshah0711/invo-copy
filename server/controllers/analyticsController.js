@@ -1,5 +1,6 @@
 const Invoice = require('../models/Invoice');
 const VendorInvoice = require('../models/VendorInvoice');
+const Expense = require('../models/Expense');
 const Client = require('../models/Client');
 const Notification = require('../models/Notification');
 
@@ -173,4 +174,101 @@ const markNotificationsRead = async (req, res, next) => {
   }
 };
 
-module.exports = { getSummary, getMonthlyData, getTopClients, getStatusBreakdown, getNotifications, markNotificationsRead };
+// @desc    Profit & Loss statement (last 12 months)
+// @route   GET /api/analytics/pnl
+// @access  Private
+const getPnL = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const now = new Date();
+    const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+
+    // Income: paid invoices per month
+    const incomeByMonth = await Invoice.aggregate([
+      { $match: { userId, status: 'Paid', paidAt: { $gte: twelveMonthsAgo } } },
+      { $group: {
+        _id: { year: { $year: '$paidAt' }, month: { $month: '$paidAt' } },
+        income: { $sum: '$total' },
+      }},
+    ]);
+
+    // AP: paid vendor invoices per month
+    const apByMonth = await VendorInvoice.aggregate([
+      { $match: { userId, status: 'Paid', paidAt: { $gte: twelveMonthsAgo } } },
+      { $group: {
+        _id: { year: { $year: '$paidAt' }, month: { $month: '$paidAt' } },
+        payables: { $sum: '$total' },
+      }},
+    ]);
+
+    // Expenses per month
+    const expByMonth = await Expense.aggregate([
+      { $match: { userId, date: { $gte: twelveMonthsAgo } } },
+      { $group: {
+        _id: { year: { $year: '$date' }, month: { $month: '$date' } },
+        expenses: { $sum: '$amount' },
+      }},
+    ]);
+
+    // Build full 12-month array
+    const months = [];
+    let totalIncome = 0, totalPayables = 0, totalExpenses = 0;
+
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const y = d.getFullYear(), m = d.getMonth() + 1;
+
+      const inc = incomeByMonth.find(r => r._id.year === y && r._id.month === m)?.income || 0;
+      const ap = apByMonth.find(r => r._id.year === y && r._id.month === m)?.payables || 0;
+      const exp = expByMonth.find(r => r._id.year === y && r._id.month === m)?.expenses || 0;
+      const netProfit = inc - ap - exp;
+
+      totalIncome += inc;
+      totalPayables += ap;
+      totalExpenses += exp;
+
+      months.push({
+        label: `${d.toLocaleString('default', { month: 'short' })} ${y}`,
+        month: d.toLocaleString('default', { month: 'short' }),
+        year: y,
+        income: inc,
+        payables: ap,
+        expenses: exp,
+        outflow: ap + exp,
+        netProfit,
+      });
+    }
+
+    const totalOutflow = totalPayables + totalExpenses;
+    const netProfit = totalIncome - totalOutflow;
+    const netMargin = totalIncome > 0 ? ((netProfit / totalIncome) * 100).toFixed(1) : '0.0';
+
+    // Category breakdown for expenses
+    const expenseCategoryBreakdown = await Expense.aggregate([
+      { $match: { userId, date: { $gte: twelveMonthsAgo } } },
+      { $group: { _id: '$category', total: { $sum: '$amount' }, count: { $sum: 1 } } },
+      { $sort: { total: -1 } },
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        months,
+        summary: {
+          totalIncome,
+          totalPayables,
+          totalExpenses,
+          totalOutflow,
+          netProfit,
+          netMargin: parseFloat(netMargin),
+          isProfitable: netProfit >= 0,
+        },
+        expenseCategoryBreakdown,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getSummary, getMonthlyData, getTopClients, getStatusBreakdown, getNotifications, markNotificationsRead, getPnL };

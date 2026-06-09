@@ -13,6 +13,7 @@ import PayablesPage from './pages/PayablesPage';
 import ClientsPage from './pages/ClientsPage';
 import SettingsPage from './pages/SettingsPage';
 import ExpensesPage from './pages/ExpensesPage';
+import PaymentPage from './pages/PaymentPage';
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
           {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/pay/:id" element={<PaymentPage />} />
 
           {/* Protected routes */}
           <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />

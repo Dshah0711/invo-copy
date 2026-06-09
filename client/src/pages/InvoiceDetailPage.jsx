@@ -45,6 +45,13 @@ const InvoiceDetailPage = () => {
     finally { setActionLoading(''); }
   };
 
+  const handleCopyPaymentLink = () => {
+    const link = `${window.location.origin}/pay/${invoice._id}`;
+    navigator.clipboard.writeText(link)
+      .then(() => toast.success('Payment link copied! 📋'))
+      .catch(() => toast.error('Failed to copy link'));
+  };
+
   const handleDelete = async () => {
     if (!window.confirm('Delete this invoice?')) return;
     try { await deleteInvoice(id); toast.success('Deleted'); navigate('/invoices'); }
@@ -78,6 +85,11 @@ const InvoiceDetailPage = () => {
             {invoice.status !== 'Paid' && (
               <button onClick={handleSend} disabled={actionLoading === 'send'} className="btn-secondary">
                 {actionLoading === 'send' ? '⏳' : '📧'} Send Email
+              </button>
+            )}
+            {invoice.status !== 'Paid' && invoice.status !== 'Cancelled' && (
+              <button onClick={handleCopyPaymentLink} className="btn-secondary">
+                🔗 Copy Pay Link
               </button>
             )}
             <button onClick={handleDownload} disabled={actionLoading === 'pdf'} className="btn-secondary">

@@ -79,6 +79,8 @@ const invoiceSchema = new mongoose.Schema(
     sentAt: { type: Date, default: null },
     paidAt: { type: Date, default: null },
     reminderSentAt: { type: Date, default: null },
+    razorpayOrderId: { type: String, default: '' },
+    razorpayPaymentId: { type: String, default: '' },
     isRecurring: { type: Boolean, default: false },
     recurringInterval: {
       type: String,

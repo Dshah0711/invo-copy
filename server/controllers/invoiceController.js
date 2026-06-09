@@ -230,7 +230,7 @@ const sendInvoice = async (req, res, next) => {
     // Generate PDF
     const pdfBuffer = await pdfService.generateInvoicePDF(invoice, req.user);
 
-    // Send email with PDF attachment
+    // Send email with PDF attachment and Pay Now button
     await emailService.sendInvoiceEmail({
       to: invoice.client.email,
       clientName: invoice.client.name,
@@ -241,6 +241,7 @@ const sendInvoice = async (req, res, next) => {
       senderName: req.user.name,
       senderCompany: req.user.company,
       pdfBuffer,
+      payNowUrl: `${process.env.CLIENT_URL}/pay/${invoice._id}`,
     });
 
     // Update status and sentAt

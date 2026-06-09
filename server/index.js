@@ -19,6 +19,7 @@ const vendorInvoiceRoutes = require('./routes/vendorInvoiceRoutes');
 const clientRoutes = require('./routes/clientRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 const app = express();
 
@@ -44,8 +45,15 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// Body parsing
-app.use(express.json({ limit: '10mb' }));
+// Body parsing — capture raw body for Razorpay webhook signature verification
+app.use(
+  express.json({
+    limit: '10mb',
+    verify: (req, res, buf) => {
+      req.rawBody = buf.toString();
+    },
+  })
+);
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
@@ -69,6 +77,7 @@ app.use('/api/vendor-invoices', vendorInvoiceRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/expenses', expenseRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // 404 handler
 app.use((req, res) => {

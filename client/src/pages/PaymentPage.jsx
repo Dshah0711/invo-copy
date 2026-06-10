@@ -47,6 +47,55 @@ export default function PaymentPage() {
   const [paid, setPaid] = useState(false);
   const [paymentDetails, setPaymentDetails] = useState(null);
 
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null,
+    onCancel: null,
+    confirmText: 'Confirm',
+    cancelText: 'Cancel',
+    isAlert: false,
+  });
+
+  const customConfirm = (title, message, onConfirm, onCancel) => {
+    setModalConfig({
+      isOpen: true,
+      title,
+      message,
+      onConfirm: () => {
+        setModalConfig(prev => ({ ...prev, isOpen: false }));
+        if (onConfirm) onConfirm();
+      },
+      onCancel: () => {
+        setModalConfig(prev => ({ ...prev, isOpen: false }));
+        if (onCancel) onCancel();
+      },
+      confirmText: 'Proceed',
+      cancelText: 'Cancel',
+      isAlert: false,
+    });
+  };
+
+  const customAlert = (title, message, onClose) => {
+    setModalConfig({
+      isOpen: true,
+      title,
+      message,
+      onConfirm: () => {
+        setModalConfig(prev => ({ ...prev, isOpen: false }));
+        if (onClose) onClose();
+      },
+      onCancel: () => {
+        setModalConfig(prev => ({ ...prev, isOpen: false }));
+        if (onClose) onClose();
+      },
+      confirmText: 'OK',
+      cancelText: '',
+      isAlert: true,
+    });
+  };
+
   const fetchInvoice = useCallback(async () => {
     try {
       setLoading(true);
@@ -86,7 +135,7 @@ export default function PaymentPage() {
         });
       }
     } catch (err) {
-      alert('Simulation verification failed: ' + (err.response?.data?.message || err.message));
+      customAlert('Verification Failed', 'Simulation verification failed: ' + (err.response?.data?.message || err.message));
     } finally {
       setPaying(false);
     }
@@ -102,21 +151,23 @@ export default function PaymentPage() {
       const { orderId, amount, currency, keyId, clientName, clientEmail, invoiceNumber, isMock } = orderRes.data.data;
 
       if (isMock) {
-        const confirmPay = window.confirm(
-          `[DEMO MODE] Razorpay API keys are not configured.\n\nWould you like to simulate a successful payment of ${formatCurrency(invoice.total, invoice.currencySymbol)}?`
+        customConfirm(
+          'Simulation Mode',
+          `[DEMO MODE] Razorpay API keys are not configured. Would you like to simulate a successful payment of ${formatCurrency(invoice.total, invoice.currencySymbol)}?`,
+          () => {
+            simulatePaymentMock(invoice, orderId);
+          },
+          () => {
+            setPaying(false);
+          }
         );
-        if (confirmPay) {
-          await simulatePaymentMock(invoice, orderId);
-        } else {
-          setPaying(false);
-        }
         return;
       }
 
       // Load Razorpay SDK (only if real checkout is active)
       const loaded = await loadRazorpayScript();
       if (!loaded) {
-        alert('Failed to load Razorpay. Please check your internet connection and try again.');
+        customAlert('Load Error', 'Failed to load Razorpay. Please check your internet connection and try again.');
         setPaying(false);
         return;
       }
@@ -158,7 +209,7 @@ export default function PaymentPage() {
               });
             }
           } catch (err) {
-            alert('Payment verification failed. Please contact support with your Payment ID: ' + response.razorpay_payment_id);
+            customAlert('Verification Failed', 'Payment verification failed. Please contact support with your Payment ID: ' + response.razorpay_payment_id);
           }
           setPaying(false);
         },
@@ -173,7 +224,7 @@ export default function PaymentPage() {
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', (response) => {
         if (safetyTimeout) clearTimeout(safetyTimeout);
-        alert(`Payment failed: ${response.error.description}`);
+        customAlert('Payment Failed', `Payment failed: ${response.error.description}`);
         setPaying(false);
       });
 
@@ -182,20 +233,22 @@ export default function PaymentPage() {
       safetyTimeout = setTimeout(() => {
         const btn = document.querySelector('.pay-btn');
         if (btn && btn.disabled) {
-          const proceedMock = window.confirm(
-            "The payment gateway is taking too long to open. This can happen if an ad-blocker (like Brave Shields, uBlock Origin) is blocking Razorpay's scripts on localhost.\n\nWould you like to simulate a successful payment instead to test the application flow?"
+          customConfirm(
+            'Gateway Timeout',
+            "The payment gateway is taking too long to open. This can happen if an ad-blocker (like Brave Shields, uBlock Origin) is blocking Razorpay's scripts on localhost. Would you like to simulate a successful payment instead to test the application flow?",
+            () => {
+              simulatePaymentMock(invoice, orderId);
+            },
+            () => {
+              setPaying(false);
+            }
           );
-          if (proceedMock) {
-            simulatePaymentMock(invoice, orderId);
-          } else {
-            setPaying(false);
-          }
         }
       }, 7000);
 
       rzp.open();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to initiate payment. Please try again.');
+      customAlert('Initiation Failed', err.response?.data?.message || 'Failed to initiate payment. Please try again.');
       setPaying(false);
     }
   };
@@ -664,20 +717,27 @@ export default function PaymentPage() {
           </button>
 
           {/* Simulator button for localhost testing */}
-          {window.location.hostname === 'localhost' && (
+          {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.')) && (
             <button
-              onClick={async () => {
-                if (window.confirm("Would you like to simulate a successful payment for testing?")) {
-                  setPaying(true);
-                  try {
-                    const orderRes = await axios.post(`${API_BASE}/payments/order/${invoice._id}`);
-                    const { orderId } = orderRes.data.data;
-                    await simulatePaymentMock(invoice, orderId);
-                  } catch (err) {
-                    alert('Failed to initiate mock payment: ' + (err.response?.data?.message || err.message));
+              onClick={() => {
+                customConfirm(
+                  'Simulate Payment',
+                  'Would you like to simulate a successful payment for testing?',
+                  async () => {
+                    setPaying(true);
+                    try {
+                      const orderRes = await axios.post(`${API_BASE}/payments/order/${invoice._id}`);
+                      const { orderId } = orderRes.data.data;
+                      await simulatePaymentMock(invoice, orderId);
+                    } catch (err) {
+                      customAlert('Simulation Failed', 'Failed to initiate mock payment: ' + (err.response?.data?.message || err.message));
+                      setPaying(false);
+                    }
+                  },
+                  () => {
                     setPaying(false);
                   }
-                }
+                );
               }}
               disabled={paying}
               style={{
@@ -706,6 +766,90 @@ export default function PaymentPage() {
           </p>
         </div>
       </div>
+
+      {/* Custom Modal/Dialog Overlay */}
+      {modalConfig.isOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '16px',
+        }}>
+          <div style={{
+            background: '#101012',
+            border: '1px solid #1f1f24',
+            borderRadius: '12px',
+            width: '100%',
+            maxWidth: '400px',
+            padding: '24px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.5)',
+            fontFamily: "'Outfit', sans-serif",
+          }}>
+            <h3 style={{
+              color: '#ffffff',
+              fontSize: '18px',
+              fontWeight: '700',
+              marginTop: 0,
+              marginBottom: '10px',
+            }}>{modalConfig.title}</h3>
+            <p style={{
+              color: '#94a3b8',
+              fontSize: '14px',
+              lineHeight: '1.5',
+              marginTop: 0,
+              marginBottom: '24px',
+            }}>{modalConfig.message}</p>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '12px',
+            }}>
+              {!modalConfig.isAlert && (
+                <button
+                  onClick={modalConfig.onCancel}
+                  style={{
+                    background: 'transparent',
+                    color: '#a1a1aa',
+                    border: '1px solid #27272a',
+                    borderRadius: '6px',
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease-in-out',
+                  }}
+                >
+                  {modalConfig.cancelText || 'Cancel'}
+                </button>
+              )}
+              <button
+                onClick={modalConfig.onConfirm}
+                style={{
+                  background: '#6366f1',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease-in-out',
+                }}
+              >
+                {modalConfig.confirmText || 'OK'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

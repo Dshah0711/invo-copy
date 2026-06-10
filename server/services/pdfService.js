@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer');
+const PDFDocument = require('pdfkit');
 
 const formatCurrency = (amount, symbol = '₹') => {
   return `${symbol}${Number(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -216,22 +217,156 @@ const generateInvoiceHTML = (invoice, user, template = 'modern') => {
 const generateInvoicePDF = async (invoice, user) => {
   const html = generateInvoiceHTML(invoice, user, invoice.template);
 
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+  try {
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    });
+
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: { top: '0', right: '0', bottom: '0', left: '0' },
+    });
+
+    await browser.close();
+    return pdfBuffer;
+  } catch (puppeteerError) {
+    console.warn('⚠️ Puppeteer PDF generation failed. Falling back to PDFKit:', puppeteerError.message);
+    return generatePDFKitFallback(invoice, user);
+  }
+};
+
+const generatePDFKitFallback = (invoice, user) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({ margin: 50, size: 'A4' });
+      const buffers = [];
+      doc.on('data', data => buffers.push(data));
+      doc.on('end', () => resolve(Buffer.concat(buffers)));
+
+      const sym = invoice.currencySymbol || '₹';
+
+      // Header Brand
+      doc.fillColor('#6366f1').fontSize(24).font('Helvetica-Bold').text(user.company || user.name || 'InvoAI', 50, 50);
+      doc.fillColor('#64748b').fontSize(10).font('Helvetica').text(user.email || '', 50, doc.y + 2);
+      if (user.phone) doc.text(user.phone);
+      if (user.gstNumber) doc.text(`GST: ${user.gstNumber}`);
+
+      // Invoice Details (Top Right)
+      doc.fillColor('#6366f1').fontSize(28).font('Helvetica-Bold').text('INVOICE', 350, 50, { align: 'right', width: 200 });
+      doc.fillColor('#1e293b').fontSize(12).font('Helvetica-Bold').text(invoice.invoiceNumber, 350, 85, { align: 'right', width: 200 });
+      doc.fillColor(invoice.status === 'Paid' ? '#22c55e' : '#f59e0b').fontSize(10).font('Helvetica-Bold').text(invoice.status.toUpperCase(), 350, 105, { align: 'right', width: 200 });
+
+      doc.moveDown(2);
+
+      // Bill To (Left) & Issue/Due Date (Right)
+      const startY = doc.y;
+      doc.fillColor('#94a3b8').fontSize(10).font('Helvetica-Bold').text('BILL TO', 50, startY);
+      doc.fillColor('#1e293b').fontSize(12).font('Helvetica-Bold').text(invoice.client.name, 50, startY + 15);
+      doc.fillColor('#64748b').fontSize(10).font('Helvetica').text(invoice.client.company || '', 50, startY + 30);
+      doc.text(invoice.client.email || '', 50, startY + 42);
+      if (invoice.client.phone) doc.text(invoice.client.phone, 50, startY + 54);
+      if (invoice.client.address) doc.text(invoice.client.address, 50, startY + 66);
+
+      doc.fillColor('#94a3b8').fontSize(10).font('Helvetica-Bold').text('DATE & AMOUNT', 350, startY);
+      doc.fillColor('#64748b').fontSize(10).font('Helvetica').text('Issue Date:', 350, startY + 15);
+      doc.fillColor('#1e293b').font('Helvetica-Bold').text(formatDate(invoice.issueDate || invoice.createdAt), 430, startY + 15);
+      
+      doc.fillColor('#64748b').font('Helvetica').text('Due Date:', 350, startY + 30);
+      doc.fillColor(invoice.status === 'Overdue' ? '#ef4444' : '#1e293b').font('Helvetica-Bold').text(formatDate(invoice.dueDate), 430, startY + 30);
+
+      doc.fillColor('#64748b').font('Helvetica').text('Total Due:', 350, startY + 45);
+      doc.fillColor('#6366f1').font('Helvetica-Bold').fontSize(14).text(formatCurrency(invoice.total, sym), 430, startY + 45);
+
+      doc.moveDown(4);
+
+      // Table Header
+      const tableTop = doc.y + 40;
+      doc.fillColor('#6366f1').rect(50, tableTop, 500, 25).fill();
+      
+      doc.fillColor('#ffffff').fontSize(10).font('Helvetica-Bold');
+      doc.text('Description', 60, tableTop + 7);
+      doc.text('Qty', 320, tableTop + 7, { width: 40, align: 'center' });
+      doc.text('Rate', 380, tableTop + 7, { width: 70, align: 'right' });
+      doc.text('Amount', 470, tableTop + 7, { width: 70, align: 'right' });
+
+      // Table Rows
+      let currentY = tableTop + 25;
+      doc.fillColor('#1e293b').font('Helvetica').fontSize(10);
+      
+      invoice.lineItems.forEach((item, index) => {
+        // Draw row background for alternating colors
+        if (index % 2 === 0) {
+          doc.fillColor('#f8fafc').rect(50, currentY, 500, 22).fill();
+        }
+        
+        doc.fillColor('#1e293b');
+        doc.text(item.description, 60, currentY + 6, { width: 250, lineBreak: false });
+        doc.text(item.quantity.toString(), 320, currentY + 6, { width: 40, align: 'center' });
+        doc.text(formatCurrency(item.rate, sym), 380, currentY + 6, { width: 70, align: 'right' });
+        doc.text(formatCurrency(item.amount, sym), 470, currentY + 6, { width: 70, align: 'right' });
+        
+        // Draw bottom border
+        doc.strokeColor('#f1f5f9').lineWidth(1).moveTo(50, currentY + 22).lineTo(550, currentY + 22).stroke();
+        
+        currentY += 22;
+      });
+
+      doc.moveDown(2);
+
+      // Totals section
+      const totalsY = doc.y + 10;
+      doc.fillColor('#64748b').fontSize(10).font('Helvetica').text('Subtotal:', 350, totalsY);
+      doc.fillColor('#1e293b').font('Helvetica-Bold').text(formatCurrency(invoice.subtotal, sym), 470, totalsY, { align: 'right', width: 70 });
+
+      let nextTotalsY = totalsY + 15;
+      if (invoice.discountAmount > 0) {
+        doc.fillColor('#64748b').font('Helvetica').text(`Discount (${invoice.discountPercent}%):`, 350, nextTotalsY);
+        doc.fillColor('#ef4444').font('Helvetica-Bold').text(`-${formatCurrency(invoice.discountAmount, sym)}`, 470, nextTotalsY, { align: 'right', width: 70 });
+        nextTotalsY += 15;
+      }
+
+      if (invoice.taxType !== 'None') {
+        doc.fillColor('#64748b').font('Helvetica').text(`${invoice.taxType} (${invoice.taxRate}%):`, 350, nextTotalsY);
+        doc.fillColor('#1e293b').font('Helvetica-Bold').text(formatCurrency(invoice.taxAmount, sym), 470, nextTotalsY, { align: 'right', width: 70 });
+        nextTotalsY += 15;
+      }
+
+      // Draw grand total box
+      doc.fillColor('#6366f1').rect(350, nextTotalsY, 200, 32).fill();
+      doc.fillColor('#ffffff').fontSize(11).font('Helvetica-Bold').text('Total Due:', 360, nextTotalsY + 10);
+      doc.text(formatCurrency(invoice.total, sym), 450, nextTotalsY + 10, { align: 'right', width: 90 });
+
+      // Watermark
+      if (invoice.status === 'Paid') {
+        doc.save();
+        doc.fillColor('#22c55e').opacity(0.15).fontSize(60).font('Helvetica-Bold');
+        doc.rotate(-30, { origin: [300, 300] });
+        doc.text('PAID', 150, 350, { letterSpacing: 10 });
+        doc.restore();
+      }
+
+      // Notes & Terms
+      if (invoice.notes || invoice.terms) {
+        const bottomY = Math.max(doc.y + 20, nextTotalsY + 60);
+        doc.strokeColor('#e2e8f0').lineWidth(1).moveTo(50, bottomY).lineTo(550, bottomY).stroke();
+        
+        doc.fillColor('#94a3b8').fontSize(9).font('Helvetica-Bold').text('NOTES & TERMS', 50, bottomY + 15);
+        doc.fillColor('#64748b').fontSize(9).font('Helvetica').text(invoice.notes || 'Thank you for your business!', 50, bottomY + 30, { width: 450 });
+        if (invoice.terms) {
+          doc.text(invoice.terms, 50, doc.y + 10, { width: 450 });
+        }
+      }
+
+      doc.end();
+    } catch (e) {
+      reject(e);
+    }
   });
-
-  const page = await browser.newPage();
-  await page.setContent(html, { waitUntil: 'networkidle0' });
-
-  const pdfBuffer = await page.pdf({
-    format: 'A4',
-    printBackground: true,
-    margin: { top: '0', right: '0', bottom: '0', left: '0' },
-  });
-
-  await browser.close();
-  return pdfBuffer;
 };
 
 module.exports = { generateInvoicePDF, generateInvoiceHTML };

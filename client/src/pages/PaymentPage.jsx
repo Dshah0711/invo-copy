@@ -2,7 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || (
+let apiBaseUrl = import.meta.env.VITE_API_URL;
+if (apiBaseUrl && !apiBaseUrl.endsWith('/api') && !apiBaseUrl.endsWith('/api/')) {
+  apiBaseUrl = apiBaseUrl.replace(/\/$/, '') + '/api';
+}
+
+const API_BASE = apiBaseUrl || (
   window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:5000/api'
     : `http://${window.location.hostname}:5000/api`

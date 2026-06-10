@@ -3,6 +3,16 @@ import { getClients, createClient, updateClient, deleteClient } from '../service
 import Layout from '../components/Layout';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
+import {
+  Search,
+  Users,
+  Edit2,
+  Trash2,
+  Mail,
+  Phone,
+  Hash,
+  UserPlus
+} from 'lucide-react';
 
 const fmt = (n) => `₹${Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
 
@@ -107,19 +117,23 @@ const ClientsPage = () => {
           <h2 className="page-title">Clients</h2>
           <p className="page-subtitle">{clients.length} clients</p>
         </div>
-        <button onClick={() => setModal('new')} className="btn-primary">👤 Add Client</button>
+        <button onClick={() => setModal('new')} className="btn-primary flex items-center gap-1.5">
+          <UserPlus size={14} /> Add Client
+        </button>
       </div>
 
       <div className="mb-6 relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+          <Search size={14} />
+        </span>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search clients..." className="input pl-9" />
       </div>
 
       {loading ? (
         <div className="flex justify-center p-12"><div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" /></div>
       ) : clients.length === 0 ? (
-        <div className="card p-12 text-center">
-          <p className="text-4xl mb-3">👥</p>
+        <div className="card p-12 text-center flex flex-col items-center justify-center">
+          <Users size={40} className="text-slate-600 mb-3" />
           <p className="text-slate-400 mb-4">No clients yet</p>
           <button onClick={() => setModal('new')} className="btn-primary">Add your first client</button>
         </div>
@@ -129,7 +143,7 @@ const ClientsPage = () => {
             <div key={client._id} className="card p-5 hover:border-primary-500/30 transition-all">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500/30 to-violet-500/20 flex items-center justify-center text-primary-400 font-bold text-lg">
+                  <div className="w-10 h-10 rounded-lg bg-dark-600 border border-dark-500 flex items-center justify-center text-slate-200 font-bold text-base">
                     {client.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
@@ -137,16 +151,33 @@ const ClientsPage = () => {
                     {client.company && <p className="text-xs text-slate-500">{client.company}</p>}
                   </div>
                 </div>
-                <div className="flex gap-1">
-                  <button onClick={() => setModal(client)} className="btn-icon text-xs p-1.5">✏️</button>
-                  <button onClick={() => handleDelete(client._id, client.name)} className="btn-icon text-xs p-1.5 text-red-400">🗑️</button>
+                <div className="flex gap-1.5">
+                  <button onClick={() => setModal(client)} className="btn-icon text-xs p-1.5 flex items-center justify-center">
+                    <Edit2 size={13} />
+                  </button>
+                  <button onClick={() => handleDelete(client._id, client.name)} className="btn-icon text-xs p-1.5 text-red-400 flex items-center justify-center">
+                    <Trash2 size={13} />
+                  </button>
                 </div>
               </div>
 
               <div className="space-y-1.5 text-sm">
-                <div className="flex items-center gap-2 text-slate-400"><span>📧</span><span className="truncate">{client.email}</span></div>
-                {client.phone && <div className="flex items-center gap-2 text-slate-400"><span>📞</span><span>{client.phone}</span></div>}
-                {client.gstNumber && <div className="flex items-center gap-2 text-slate-400"><span>🏷️</span><span>{client.gstNumber}</span></div>}
+                <div className="flex items-center gap-2 text-slate-400">
+                  <Mail size={13} />
+                  <span className="truncate">{client.email}</span>
+                </div>
+                {client.phone && (
+                  <div className="flex items-center gap-2 text-slate-400">
+                    <Phone size={13} />
+                    <span>{client.phone}</span>
+                  </div>
+                )}
+                {client.gstNumber && (
+                  <div className="flex items-center gap-2 text-slate-400">
+                    <Hash size={13} />
+                    <span>{client.gstNumber}</span>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-dark-600">

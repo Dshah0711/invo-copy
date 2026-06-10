@@ -3,6 +3,17 @@ import { Link } from 'react-router-dom';
 import { getInvoices, deleteInvoice, updateInvoiceStatus, sendInvoiceEmail, downloadInvoicePDF } from '../services/api';
 import Layout from '../components/Layout';
 import toast from 'react-hot-toast';
+import {
+  Search,
+  Plus,
+  FileText,
+  Eye,
+  Mail,
+  Download,
+  Check,
+  Trash2,
+  Loader2
+} from 'lucide-react';
 
 const fmt = (n, sym = '₹') => `${sym}${Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -87,13 +98,17 @@ const InvoicesPage = () => {
           <h2 className="page-title">Invoices</h2>
           <p className="page-subtitle">{pagination.total || 0} total invoices</p>
         </div>
-        <Link to="/invoices/new" className="btn-primary">✏️ New Invoice</Link>
+        <Link to="/invoices/new" className="btn-primary flex items-center gap-1.5">
+          <Plus size={14} /> New Invoice
+        </Link>
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-6">
         <div className="relative flex-1 min-w-60">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+            <Search size={14} />
+          </span>
           <input
             value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder="Search invoices or clients..." className="input pl-9"
@@ -104,7 +119,7 @@ const InvoicesPage = () => {
             <button
               key={s}
               onClick={() => { setStatus(s); setPage(1); }}
-              className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all ${status === s ? 'bg-primary-500 text-white' : 'bg-dark-600 text-slate-400 hover:text-slate-200'}`}
+              className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${status === s ? 'bg-white text-black' : 'bg-dark-700 border border-dark-500 text-slate-400 hover:text-slate-200'}`}
             >
               {s === 'all' ? 'All' : s}
             </button>
@@ -119,8 +134,8 @@ const InvoicesPage = () => {
             <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto" />
           </div>
         ) : invoices.length === 0 ? (
-          <div className="p-12 text-center">
-            <p className="text-4xl mb-3">📄</p>
+          <div className="p-12 text-center flex flex-col items-center justify-center">
+            <FileText size={40} className="text-slate-600 mb-3" />
             <p className="text-slate-400">No invoices found</p>
             <Link to="/invoices/new" className="btn-primary mt-4 inline-flex">Create your first invoice</Link>
           </div>
@@ -154,20 +169,26 @@ const InvoicesPage = () => {
                   <td className={inv.status === 'Overdue' ? 'text-red-400' : 'text-slate-300'}>{fmtDate(inv.dueDate)}</td>
                   <td><span className={getBadge(inv.status)}>{inv.status}</span></td>
                   <td>
-                    <div className="flex items-center gap-1">
-                      <Link to={`/invoices/${inv._id}`} className="btn-icon text-xs p-1.5" title="View">👁️</Link>
+                    <div className="flex items-center gap-1.5">
+                      <Link to={`/invoices/${inv._id}`} className="btn-icon text-xs p-1.5 flex items-center justify-center" title="View">
+                        <Eye size={13} />
+                      </Link>
                       {inv.status !== 'Paid' && (
-                        <button onClick={() => handleSend(inv._id)} disabled={actionLoading === inv._id+'_send'} className="btn-icon text-xs p-1.5" title="Send Email">
-                          {actionLoading === inv._id+'_send' ? '⏳' : '📧'}
+                        <button onClick={() => handleSend(inv._id)} disabled={actionLoading === inv._id+'_send'} className="btn-icon text-xs p-1.5 flex items-center justify-center" title="Send Email">
+                          {actionLoading === inv._id+'_send' ? <Loader2 size={13} className="animate-spin" /> : <Mail size={13} />}
                         </button>
                       )}
-                      <button onClick={() => handleDownload(inv._id, inv.invoiceNumber)} disabled={actionLoading === inv._id+'_pdf'} className="btn-icon text-xs p-1.5" title="Download PDF">
-                        {actionLoading === inv._id+'_pdf' ? '⏳' : '📥'}
+                      <button onClick={() => handleDownload(inv._id, inv.invoiceNumber)} disabled={actionLoading === inv._id+'_pdf'} className="btn-icon text-xs p-1.5 flex items-center justify-center" title="Download PDF">
+                        {actionLoading === inv._id+'_pdf' ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
                       </button>
                       {inv.status !== 'Paid' && (
-                        <button onClick={() => handleMarkPaid(inv._id)} disabled={actionLoading === inv._id+'_pay'} className="btn-icon text-xs p-1.5 text-emerald-400" title="Mark Paid">✅</button>
+                        <button onClick={() => handleMarkPaid(inv._id)} disabled={actionLoading === inv._id+'_pay'} className="btn-icon text-xs p-1.5 text-emerald-400 flex items-center justify-center" title="Mark Paid">
+                          {actionLoading === inv._id+'_pay' ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+                        </button>
                       )}
-                      <button onClick={() => handleDelete(inv._id, inv.invoiceNumber)} className="btn-icon text-xs p-1.5 text-red-400" title="Delete">🗑️</button>
+                      <button onClick={() => handleDelete(inv._id, inv.invoiceNumber)} className="btn-icon text-xs p-1.5 text-red-400 flex items-center justify-center" title="Delete">
+                        <Trash2 size={13} />
+                      </button>
                     </div>
                   </td>
                 </tr>

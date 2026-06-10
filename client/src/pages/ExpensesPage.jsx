@@ -9,6 +9,14 @@ import toast from 'react-hot-toast';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
+import {
+  TrendingDown,
+  Coins,
+  Award,
+  RefreshCw,
+  Edit2,
+  Trash2
+} from 'lucide-react';
 
 const fmt = (n, sym = '₹') =>
   `${sym}${Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
@@ -125,7 +133,10 @@ export default function ExpensesPage() {
     <Layout title="Expenses">
       <div className="page-header">
         <div>
-          <h2 className="page-title">💸 Expenses</h2>
+          <h2 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <TrendingDown size={24} className="text-rose-500" />
+            Expenses
+          </h2>
           <p className="page-subtitle">Track your business costs to get a complete P&L view</p>
         </div>
         <button className="btn-primary" onClick={openAdd} id="add-expense-btn">
@@ -135,20 +146,20 @@ export default function ExpensesPage() {
 
       {/* KPI row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
-        <KpiCard icon="📦" label="Total Expenses" value={fmt(totalAmount, sym)} sub={`${total} entries`} color="#ef4444" />
+        <KpiCard icon={TrendingDown} label="Total Expenses" value={fmt(totalAmount, sym)} sub={`${total} entries`} color="#f43f5e" />
         <KpiCard
-          icon="🏆"
+          icon={Award}
           label="Biggest Category"
           value={breakdown[0]?.name || '—'}
           sub={breakdown[0] ? fmt(breakdown[0].value, sym) : 'No data'}
           color="#f59e0b"
         />
         <KpiCard
-          icon="🔄"
+          icon={RefreshCw}
           label="Recurring"
           value={expenses.filter(e => e.isRecurring).length}
           sub="active recurring entries"
-          color="#6366f1"
+          color="#a1a1aa"
         />
       </div>
 
@@ -159,33 +170,33 @@ export default function ExpensesPage() {
           {/* Filter bar */}
           <div style={{
             display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px',
-            background: '#141d35', borderRadius: '14px', padding: '14px 18px',
-            border: '1px solid #1e2a45',
+            background: '#101012', borderRadius: '12px', padding: '14px 18px',
+            border: '1px solid #1f1f24',
           }}>
             <div style={{ flex: '1', minWidth: '140px' }}>
-              <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px', fontWeight: '600', textTransform: 'uppercase' }}>Category</label>
+              <label style={{ fontSize: '10px', color: '#64748b', display: 'block', marginBottom: '4px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Category</label>
               <select
                 value={filterCategory}
                 onChange={e => setFilterCategory(e.target.value)}
-                style={{ width: '100%', background: '#0f1629', border: '1px solid #2d3a5e', borderRadius: '8px', color: '#e2e8f0', padding: '8px 10px', fontSize: '13px' }}
+                style={{ width: '100%', background: '#141417', border: '1px solid #1f1f24', borderRadius: '8px', color: '#e2e8f0', padding: '8px 10px', fontSize: '13px', outline: 'none' }}
               >
                 <option value="all">All Categories</option>
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div>
-              <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px', fontWeight: '600', textTransform: 'uppercase' }}>From</label>
+              <label style={{ fontSize: '10px', color: '#64748b', display: 'block', marginBottom: '4px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>From</label>
               <input type="date" value={filterFrom} onChange={e => setFilterFrom(e.target.value)}
-                style={{ background: '#0f1629', border: '1px solid #2d3a5e', borderRadius: '8px', color: '#e2e8f0', padding: '8px 10px', fontSize: '13px' }} />
+                style={{ background: '#141417', border: '1px solid #1f1f24', borderRadius: '8px', color: '#e2e8f0', padding: '8px 10px', fontSize: '13px', outline: 'none' }} />
             </div>
             <div>
-              <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px', fontWeight: '600', textTransform: 'uppercase' }}>To</label>
+              <label style={{ fontSize: '10px', color: '#64748b', display: 'block', marginBottom: '4px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>To</label>
               <input type="date" value={filterTo} onChange={e => setFilterTo(e.target.value)}
-                style={{ background: '#0f1629', border: '1px solid #2d3a5e', borderRadius: '8px', color: '#e2e8f0', padding: '8px 10px', fontSize: '13px' }} />
+                style={{ background: '#141417', border: '1px solid #1f1f24', borderRadius: '8px', color: '#e2e8f0', padding: '8px 10px', fontSize: '13px', outline: 'none' }} />
             </div>
             {(filterCategory !== 'all' || filterFrom || filterTo) && (
               <button onClick={() => { setFilterCategory('all'); setFilterFrom(''); setFilterTo(''); }}
-                style={{ alignSelf: 'flex-end', padding: '8px 14px', borderRadius: '8px', border: '1px solid #2d3a5e', background: 'transparent', color: '#94a3b8', fontSize: '12px', cursor: 'pointer' }}>
+                style={{ alignSelf: 'flex-end', padding: '8px 14px', borderRadius: '8px', border: '1px solid #1f1f24', background: 'transparent', color: '#94a3b8', fontSize: '12px', cursor: 'pointer' }}>
                 ✕ Clear
               </button>
             )}
@@ -198,8 +209,8 @@ export default function ExpensesPage() {
                 <div style={{ width: '32px', height: '32px', border: '2px solid #6366f1', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
               </div>
             ) : expenses.length === 0 ? (
-              <div style={{ padding: '64px', textAlign: 'center' }}>
-                <p style={{ fontSize: '40px', marginBottom: '12px' }}>💸</p>
+              <div style={{ padding: '64px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <TrendingDown size={48} className="text-slate-600" style={{ marginBottom: '12px' }} />
                 <p style={{ color: '#64748b', fontSize: '15px' }}>No expenses yet</p>
                 <p style={{ color: '#475569', fontSize: '13px', marginTop: '4px' }}>Click "Add Expense" to start tracking your costs</p>
               </div>
@@ -236,8 +247,8 @@ export default function ExpensesPage() {
                       <td style={{ color: '#94a3b8' }}>{fmtDate(exp.date)}</td>
                       <td>
                         {exp.isRecurring ? (
-                          <span style={{ color: '#8b5cf6', fontSize: '12px', fontWeight: '600' }}>
-                            🔄 {RECURRENCE_LABELS[exp.recurrenceInterval] || exp.recurrenceInterval}
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#8b5cf6', fontSize: '12px', fontWeight: '600' }}>
+                            <RefreshCw size={12} /> {RECURRENCE_LABELS[exp.recurrenceInterval] || exp.recurrenceInterval}
                           </span>
                         ) : (
                           <span style={{ color: '#475569', fontSize: '12px' }}>One-time</span>
@@ -246,13 +257,13 @@ export default function ExpensesPage() {
                       <td style={{ fontWeight: '700', color: '#ef4444', fontSize: '15px' }}>{fmt(exp.amount, sym)}</td>
                       <td>
                         <div style={{ display: 'flex', gap: '8px' }}>
-                          <button onClick={() => openEdit(exp)}
-                            style={{ padding: '5px 12px', borderRadius: '8px', border: '1px solid #2d3a5e', background: 'transparent', color: '#94a3b8', fontSize: '12px', cursor: 'pointer' }}>
-                            ✏️
+                           <button onClick={() => openEdit(exp)}
+                            style={{ padding: '5px 12px', borderRadius: '8px', border: '1px solid #1f1f24', background: 'transparent', color: '#94a3b8', fontSize: '12px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Edit2 size={13} />
                           </button>
                           <button onClick={() => handleDelete(exp._id)}
-                            style={{ padding: '5px 12px', borderRadius: '8px', border: '1px solid #ef444422', background: 'transparent', color: '#ef4444', fontSize: '12px', cursor: 'pointer' }}>
-                            🗑️
+                            style={{ padding: '5px 12px', borderRadius: '8px', border: '1px solid #ef444433', background: 'transparent', color: '#ef4444', fontSize: '12px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Trash2 size={13} />
                           </button>
                         </div>
                       </td>
@@ -277,7 +288,7 @@ export default function ExpensesPage() {
                         <Cell key={i} fill={CATEGORY_COLORS[entry.name] || '#6366f1'} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(v) => [fmt(v, sym), 'Amount']} contentStyle={{ background: '#141d35', border: '1px solid #2d3a5e', borderRadius: '10px', color: '#e2e8f0' }} />
+                    <Tooltip formatter={(v) => [fmt(v, sym), 'Amount']} contentStyle={{ background: '#101012', border: '1px solid #1f1f24', borderRadius: '8px', color: '#ffffff' }} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -305,7 +316,7 @@ export default function ExpensesPage() {
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-box" style={{ maxWidth: '520px' }} onClick={e => e.stopPropagation()}>
-            <div style={{ padding: '24px 28px', borderBottom: '1px solid #1e2a45', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ padding: '24px 28px', borderBottom: '1px solid #1f1f24', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ fontWeight: '700', color: '#f1f5f9', fontSize: '18px' }}>
                 {editId ? '✏️ Edit Expense' : '+ New Expense'}
               </h3>
@@ -347,7 +358,7 @@ export default function ExpensesPage() {
                 <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
                   <input type="checkbox" checked={form.isRecurring}
                     onChange={e => setForm(p => ({ ...p, isRecurring: e.target.checked }))}
-                    style={{ width: '16px', height: '16px', accentColor: '#6366f1' }} />
+                    style={{ width: '16px', height: '16px', accentColor: '#ffffff' }} />
                   <span style={{ fontSize: '14px', color: '#94a3b8', fontWeight: '500' }}>🔄 This is a recurring expense</span>
                 </label>
                 {form.isRecurring && (
@@ -384,22 +395,22 @@ export default function ExpensesPage() {
   );
 }
 
-function KpiCard({ icon, label, value, sub, color }) {
+function KpiCard({ icon: Icon, label, value, sub, color }) {
   return (
     <div style={{
-      background: '#141d35', border: '1px solid #1e2a45', borderRadius: '16px', padding: '20px',
+      background: '#101012', border: '1px solid #1f1f24', borderRadius: '12px', padding: '20px',
       display: 'flex', alignItems: 'flex-start', gap: '14px',
     }}>
       <div style={{
-        width: '48px', height: '48px', borderRadius: '12px', flexShrink: 0,
-        background: `${color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px',
+        width: '48px', height: '48px', borderRadius: '8px', flexShrink: 0,
+        background: `${color}08`, border: '1px solid rgba(255,255,255,0.01)', display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        {icon}
+        {Icon && <Icon size={20} color={color} />}
       </div>
       <div>
-        <p style={{ fontSize: '11px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.8px' }}>{label}</p>
-        <p style={{ fontSize: '22px', fontWeight: '700', color: '#f1f5f9', marginTop: '4px', lineHeight: '1' }}>{value}</p>
-        {sub && <p style={{ fontSize: '12px', color: '#475569', marginTop: '4px' }}>{sub}</p>}
+        <p style={{ fontSize: '10px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.8px' }}>{label}</p>
+        <p style={{ fontSize: '22px', fontWeight: '800', color: '#ffffff', marginTop: '4px', lineHeight: '1' }}>{value}</p>
+        {sub && <p style={{ fontSize: '11px', color: '#475569', marginTop: '4px' }}>{sub}</p>}
       </div>
     </div>
   );

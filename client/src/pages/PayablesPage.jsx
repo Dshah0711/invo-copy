@@ -110,22 +110,22 @@ const PayablesPage = () => {
       {/* Upload Zone */}
       <div
         {...getRootProps()}
-        className={`border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all mb-6 ${
-          isDragActive ? 'border-primary-500 bg-primary-500/10' : 'border-dark-400 hover:border-primary-500/50 hover:bg-dark-700/50'
+        className={`border border-dashed rounded-xl p-10 text-center cursor-pointer transition-all mb-6 ${
+          isDragActive ? 'border-white bg-white/5' : 'border-dark-500 hover:border-dark-400 hover:bg-dark-750'
         }`}
       >
         <input {...getInputProps()} />
         {uploading ? (
           <div className="flex flex-col items-center gap-3">
-            <div className="w-12 h-12 border-3 border-primary-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-slate-300 font-medium">Uploading & parsing with AI...</p>
-            <p className="text-slate-500 text-sm">Gemini 1.5 Flash is analyzing your invoice</p>
+            <div className="w-10 h-10 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+            <p className="text-slate-300 font-semibold uppercase tracking-wider text-xs">Uploading & parsing with AI...</p>
+            <p className="text-slate-500 text-xs">Gemini 1.5 Flash is analyzing your invoice</p>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-3">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500/20 to-violet-500/10 flex items-center justify-center text-3xl">🤖</div>
-            <p className="text-slate-200 font-semibold text-lg">{isDragActive ? 'Drop it here!' : 'Drop vendor invoice here'}</p>
-            <p className="text-slate-400 text-sm">PDF, JPG, PNG up to 10MB — AI will extract all data automatically</p>
+            <div className="w-12 h-12 rounded-lg bg-dark-700 border border-dark-500 flex items-center justify-center text-2xl mb-1">🤖</div>
+            <p className="text-slate-200 font-bold text-sm uppercase tracking-wider">{isDragActive ? 'Drop it here!' : 'Drop vendor invoice here'}</p>
+            <p className="text-slate-400 text-xs">PDF, JPG, PNG up to 10MB — AI extracts data automatically</p>
             <button className="btn-primary mt-2" type="button">📤 Browse Files</button>
           </div>
         )}
@@ -135,7 +135,7 @@ const PayablesPage = () => {
       <div className="flex gap-2 flex-wrap mb-4">
         {STATUSES.map(s => (
           <button key={s} onClick={() => setStatus(s)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${status === s ? 'bg-primary-500 text-white' : 'bg-dark-600 text-slate-400 hover:text-slate-200'}`}>
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${status === s ? 'bg-white text-black' : 'bg-dark-700 border border-dark-500 text-slate-400 hover:text-slate-200'}`}>
             {s === 'all' ? 'All' : s}
           </button>
         ))}

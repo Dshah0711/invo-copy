@@ -2,7 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000/api'
+  : `http://${window.location.hostname}:5000/api`;
 
 const formatCurrency = (amount, symbol = '₹') => {
   return `${symbol}${Number(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -58,6 +60,31 @@ export default function PaymentPage() {
     fetchInvoice();
   }, [fetchInvoice]);
 
+  const simulatePaymentMock = async (inv, orderId) => {
+    try {
+      // Verify payment on our server using mock data
+      const verifyRes = await axios.post(`${API_BASE}/payments/verify`, {
+        razorpay_order_id: orderId,
+        razorpay_payment_id: `pay_mock_${Date.now()}`,
+        razorpay_signature: 'mock_signature',
+        invoiceId: inv._id,
+        isMock: true,
+      });
+
+      if (verifyRes.data.success) {
+        setPaid(true);
+        setPaymentDetails({
+          paymentId: verifyRes.data.data.paymentId,
+          paidAt: new Date().toISOString(),
+        });
+      }
+    } catch (err) {
+      alert('Simulation verification failed: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setPaying(false);
+    }
+  };
+
   const handlePayment = async () => {
     if (!invoice) return;
     setPaying(true);
@@ -72,28 +99,10 @@ export default function PaymentPage() {
           `[DEMO MODE] Razorpay API keys are not configured.\n\nWould you like to simulate a successful payment of ${formatCurrency(invoice.total, invoice.currencySymbol)}?`
         );
         if (confirmPay) {
-          try {
-            // Verify payment on our server using mock data
-            const verifyRes = await axios.post(`${API_BASE}/payments/verify`, {
-              razorpay_order_id: orderId,
-              razorpay_payment_id: `pay_mock_${Date.now()}`,
-              razorpay_signature: 'mock_signature',
-              invoiceId: invoice._id,
-              isMock: true,
-            });
-
-            if (verifyRes.data.success) {
-              setPaid(true);
-              setPaymentDetails({
-                paymentId: verifyRes.data.data.paymentId,
-                paidAt: new Date().toISOString(),
-              });
-            }
-          } catch (err) {
-            alert('Simulation verification failed: ' + (err.response?.data?.message || err.message));
-          }
+          await simulatePaymentMock(invoice, orderId);
+        } else {
+          setPaying(false);
         }
-        setPaying(false);
         return;
       }
 
@@ -104,6 +113,8 @@ export default function PaymentPage() {
         setPaying(false);
         return;
       }
+
+      let safetyTimeout;
 
       // Configure Razorpay checkout
       const options = {
@@ -122,6 +133,7 @@ export default function PaymentPage() {
           color: '#6366f1',
         },
         handler: async (response) => {
+          if (safetyTimeout) clearTimeout(safetyTimeout);
           try {
             // Verify payment on our server
             const verifyRes = await axios.post(`${API_BASE}/payments/verify`, {
@@ -145,6 +157,7 @@ export default function PaymentPage() {
         },
         modal: {
           ondismiss: () => {
+            if (safetyTimeout) clearTimeout(safetyTimeout);
             setPaying(false);
           },
         },
@@ -152,9 +165,27 @@ export default function PaymentPage() {
 
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', (response) => {
+        if (safetyTimeout) clearTimeout(safetyTimeout);
         alert(`Payment failed: ${response.error.description}`);
         setPaying(false);
       });
+
+      // Set safety timeout to reset the paying state if the user gets stuck
+      // (e.g. adblocker, tracking blocker, or frame loading restrictions)
+      safetyTimeout = setTimeout(() => {
+        const btn = document.querySelector('.pay-btn');
+        if (btn && btn.disabled) {
+          const proceedMock = window.confirm(
+            "The payment gateway is taking too long to open. This can happen if an ad-blocker (like Brave Shields, uBlock Origin) is blocking Razorpay's scripts on localhost.\n\nWould you like to simulate a successful payment instead to test the application flow?"
+          );
+          if (proceedMock) {
+            simulatePaymentMock(invoice, orderId);
+          } else {
+            setPaying(false);
+          }
+        }
+      }, 7000);
+
       rzp.open();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to initiate payment. Please try again.');
@@ -166,80 +197,84 @@ export default function PaymentPage() {
   const styles = {
     page: {
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0f1629 0%, #1a1f3e 50%, #0f1629 100%)',
+      background: '#080809',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '24px 16px',
-      fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
+      padding: '40px 16px',
+      fontFamily: "'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     },
     card: {
-      background: '#141d35',
-      borderRadius: '20px',
-      border: '1px solid rgba(99,102,241,0.2)',
-      boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+      background: '#101012',
+      borderRadius: '12px',
+      border: '1px solid #1f1f24',
       width: '100%',
-      maxWidth: '520px',
+      maxWidth: '480px',
       overflow: 'hidden',
     },
     header: {
-      background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-      padding: '32px',
+      background: '#101012',
+      borderBottom: '1px solid #1f1f24',
+      padding: '32px 32px 24px',
       textAlign: 'center',
     },
     successHeader: {
-      background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-      padding: '32px',
+      background: '#101012',
+      borderBottom: '1px solid #1f1f24',
+      padding: '32px 32px 24px',
       textAlign: 'center',
     },
     logoBox: {
-      width: '64px',
-      height: '64px',
-      borderRadius: '16px',
-      background: 'rgba(255,255,255,0.2)',
+      width: '56px',
+      height: '56px',
+      borderRadius: '10px',
+      background: '#18181b',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       margin: '0 auto 16px',
-      fontSize: '28px',
-      fontWeight: '800',
-      color: 'white',
+      fontSize: '24px',
+      fontWeight: '700',
+      color: '#ffffff',
+      border: '1px solid #27272a',
     },
     merchantName: {
-      color: 'white',
-      fontSize: '20px',
+      color: '#ffffff',
+      fontSize: '18px',
       fontWeight: '700',
       margin: '0 0 4px',
+      letterSpacing: '-0.02em',
     },
     invoiceTag: {
-      color: 'rgba(255,255,255,0.75)',
-      fontSize: '13px',
+      color: '#71717a',
+      fontSize: '12px',
       margin: 0,
     },
     body: {
-      padding: '32px',
+      padding: '28px 32px 32px',
     },
     amountBlock: {
-      background: 'rgba(99,102,241,0.08)',
-      border: '1px solid rgba(99,102,241,0.2)',
-      borderRadius: '14px',
+      background: '#141417',
+      border: '1px solid #1f1f24',
+      borderRadius: '12px',
       padding: '20px 24px',
       marginBottom: '24px',
       textAlign: 'center',
     },
     amountLabel: {
-      color: '#94a3b8',
-      fontSize: '11px',
+      color: '#71717a',
+      fontSize: '10px',
       fontWeight: '600',
       textTransform: 'uppercase',
-      letterSpacing: '1.5px',
-      margin: '0 0 8px',
+      letterSpacing: '1px',
+      margin: '0 0 6px',
     },
     amountValue: {
-      color: '#6366f1',
-      fontSize: '36px',
+      color: '#ffffff',
+      fontSize: '32px',
       fontWeight: '800',
       margin: 0,
+      letterSpacing: '-0.03em',
     },
     infoGrid: {
       display: 'grid',
@@ -248,22 +283,22 @@ export default function PaymentPage() {
       marginBottom: '24px',
     },
     infoCard: {
-      background: 'rgba(255,255,255,0.03)',
-      border: '1px solid rgba(255,255,255,0.07)',
+      background: '#141417',
+      border: '1px solid #1f1f24',
       borderRadius: '10px',
       padding: '12px 16px',
     },
     infoLabel: {
-      color: '#64748b',
-      fontSize: '11px',
+      color: '#71717a',
+      fontSize: '10px',
       fontWeight: '600',
       textTransform: 'uppercase',
       letterSpacing: '0.8px',
       margin: '0 0 4px',
     },
     infoValue: {
-      color: '#e2e8f0',
-      fontSize: '14px',
+      color: '#e4e4e7',
+      fontSize: '13px',
       fontWeight: '600',
       margin: 0,
     },
@@ -271,37 +306,37 @@ export default function PaymentPage() {
       marginBottom: '24px',
     },
     sectionTitle: {
-      color: '#64748b',
-      fontSize: '11px',
+      color: '#71717a',
+      fontSize: '10px',
       fontWeight: '600',
       textTransform: 'uppercase',
-      letterSpacing: '1px',
+      letterSpacing: '0.8px',
       marginBottom: '12px',
     },
     lineItem: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      padding: '10px 0',
-      borderBottom: '1px solid rgba(255,255,255,0.05)',
+      padding: '12px 0',
+      borderBottom: '1px solid #1f1f24',
     },
     lineItemDesc: {
-      color: '#cbd5e1',
-      fontSize: '14px',
+      color: '#e4e4e7',
+      fontSize: '13px',
       flex: 1,
     },
     lineItemMeta: {
-      color: '#64748b',
-      fontSize: '12px',
+      color: '#71717a',
+      fontSize: '11px',
     },
     lineItemAmount: {
-      color: '#e2e8f0',
-      fontSize: '14px',
+      color: '#ffffff',
+      fontSize: '13px',
       fontWeight: '600',
       marginLeft: '16px',
     },
     totalsSection: {
-      borderTop: '1px solid rgba(255,255,255,0.08)',
+      borderTop: '1px solid #1f1f24',
       paddingTop: '16px',
       marginBottom: '28px',
     },
@@ -311,7 +346,7 @@ export default function PaymentPage() {
       marginBottom: '8px',
     },
     totalLabel: {
-      color: '#64748b',
+      color: '#71717a',
       fontSize: '13px',
     },
     totalValue: {
@@ -323,45 +358,41 @@ export default function PaymentPage() {
       justifyContent: 'space-between',
       marginTop: '12px',
       paddingTop: '12px',
-      borderTop: '1px solid rgba(99,102,241,0.3)',
+      borderTop: '1px solid #2a2a32',
     },
     grandTotalLabel: {
-      color: '#e2e8f0',
-      fontSize: '16px',
+      color: '#ffffff',
+      fontSize: '15px',
       fontWeight: '700',
     },
     grandTotalValue: {
-      color: '#6366f1',
-      fontSize: '20px',
+      color: '#ffffff',
+      fontSize: '18px',
       fontWeight: '800',
     },
     payBtn: {
       width: '100%',
-      background: paying
-        ? 'rgba(99,102,241,0.5)'
-        : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-      color: 'white',
+      background: paying ? '#27272a' : '#ffffff',
+      color: paying ? '#71717a' : '#101012',
       border: 'none',
-      borderRadius: '12px',
-      padding: '16px',
-      fontSize: '16px',
-      fontWeight: '700',
+      borderRadius: '8px',
+      padding: '14px',
+      fontSize: '15px',
+      fontWeight: '600',
       cursor: paying ? 'not-allowed' : 'pointer',
-      transition: 'all 0.2s',
+      transition: 'all 0.15s ease-in-out',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       gap: '8px',
-      letterSpacing: '0.3px',
-      boxShadow: paying ? 'none' : '0 4px 20px rgba(99,102,241,0.4)',
     },
     secureNote: {
       textAlign: 'center',
       marginTop: '16px',
     },
     secureText: {
-      color: '#475569',
-      fontSize: '12px',
+      color: '#52525b',
+      fontSize: '11px',
       margin: 0,
     },
     statusBadge: {
@@ -377,11 +408,11 @@ export default function PaymentPage() {
     poweredBy: {
       textAlign: 'center',
       padding: '16px 32px',
-      borderTop: '1px solid rgba(255,255,255,0.06)',
+      borderTop: '1px solid #1f1f24',
     },
     poweredText: {
-      color: '#334155',
-      fontSize: '12px',
+      color: '#3f3f46',
+      fontSize: '11px',
       margin: 0,
     },
   };
@@ -503,17 +534,13 @@ export default function PaymentPage() {
   return (
     <div style={styles.page}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap');
         * { box-sizing: border-box; }
         body { margin: 0; }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
         .pay-btn:hover:not(:disabled) {
-          transform: translateY(-2px) !important;
-          box-shadow: 0 8px 30px rgba(99,102,241,0.6) !important;
-        }
-        .pay-btn:active:not(:disabled) {
-          transform: translateY(0) !important;
+          background: #e4e4e7 !important;
         }
       `}</style>
 
@@ -628,6 +655,36 @@ export default function PaymentPage() {
               </>
             )}
           </button>
+
+          {/* Simulator button for localhost testing */}
+          {window.location.hostname === 'localhost' && (
+            <button
+              onClick={async () => {
+                if (window.confirm("Would you like to simulate a successful payment for testing?")) {
+                  setPaying(true);
+                  try {
+                    const orderRes = await axios.post(`${API_BASE}/payments/order/${invoice._id}`);
+                    const { orderId } = orderRes.data.data;
+                    await simulatePaymentMock(invoice, orderId);
+                  } catch (err) {
+                    alert('Failed to initiate mock payment: ' + (err.response?.data?.message || err.message));
+                    setPaying(false);
+                  }
+                }
+              }}
+              disabled={paying}
+              style={{
+                ...styles.payBtn,
+                background: 'transparent',
+                color: '#6366f1',
+                border: '1px dashed #6366f1',
+                marginTop: '12px',
+                cursor: paying ? 'not-allowed' : 'pointer',
+              }}
+            >
+              🛠️ Simulate Test Payment (Local Dev)
+            </button>
+          )}
 
           {/* Secure note */}
           <div style={styles.secureNote}>

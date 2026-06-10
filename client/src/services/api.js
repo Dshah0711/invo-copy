@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000/api'
+  : `http://${window.location.hostname}:5000/api`;
+
 const API = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: API_BASE,
   withCredentials: true,
 });
 
@@ -20,7 +24,7 @@ API.interceptors.response.use(
     if (error.response?.status === 401 && error.response?.data?.code === 'TOKEN_EXPIRED' && !original._retry) {
       original._retry = true;
       try {
-        const { data } = await axios.post('http://localhost:5000/api/auth/refresh', {}, { withCredentials: true });
+        const { data } = await axios.post(`${API_BASE}/auth/refresh`, {}, { withCredentials: true });
         localStorage.setItem('invoai_token', data.accessToken);
         original.headers.Authorization = `Bearer ${data.accessToken}`;
         return API(original);

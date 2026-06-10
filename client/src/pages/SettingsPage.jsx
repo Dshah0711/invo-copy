@@ -141,9 +141,9 @@ export default function SettingsPage() {
 
         {/* Live PDF Preview Banner */}
         <div style={{
-          background: 'linear-gradient(135deg, #1e2a45 0%, #0f1e3c 100%)',
-          border: '1px solid #2d3a5e',
-          borderRadius: '16px',
+          background: '#101012',
+          border: '1px solid #1f1f24',
+          borderRadius: '12px',
           padding: '20px 24px',
           marginBottom: '24px',
           display: 'flex',
@@ -152,48 +152,50 @@ export default function SettingsPage() {
         }}>
           {/* Logo preview */}
           <div style={{
-            width: '56px', height: '56px', borderRadius: '12px', flexShrink: 0, overflow: 'hidden',
-            background: logoPreview ? 'transparent' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            width: '56px', height: '56px', borderRadius: '8px', flexShrink: 0, overflow: 'hidden',
+            background: logoPreview ? 'transparent' : '#141417',
+            border: '1px solid #1f1f24',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 0 20px rgba(99,102,241,0.4)',
           }}>
             {logoPreview
               ? <img src={logoPreview} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-              : <span style={{ color: 'white', fontWeight: '700', fontSize: '22px' }}>
+              : <span style={{ color: '#ffffff', fontWeight: '700', fontSize: '20px' }}>
                   {(form.company || form.name || 'B').charAt(0).toUpperCase()}
                 </span>
             }
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: '700', fontSize: '16px', color: '#f1f5f9' }}>
+            <div style={{ fontWeight: '700', fontSize: '15px', color: '#ffffff' }}>
               {form.company || form.name || 'Your Business Name'}
             </div>
-            <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>{user?.email}</div>
-            {form.gstNumber && <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>GST: {form.gstNumber}</div>}
+            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{user?.email}</div>
+            {form.gstNumber && <div style={{ fontSize: '10px', color: '#a1a1aa', marginTop: '2px' }}>GST: {form.gstNumber}</div>}
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '22px', fontWeight: '300', color: '#6366f1', letterSpacing: '3px' }}>INVOICE</div>
-            <div style={{ fontSize: '13px', color: '#94a3b8', marginTop: '2px' }}>{prefixPreview}</div>
-            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+            <div style={{ fontSize: '18px', fontWeight: '800', color: '#ffffff', letterSpacing: '2px' }}>INVOICE</div>
+            <div style={{ fontSize: '12px', color: '#a1a1aa', marginTop: '2px' }}>{prefixPreview}</div>
+            <div style={{ fontSize: '10px', color: '#64748b', marginTop: '4px' }}>
               Net {form.paymentTerms} days • {form.currency} {sym}
             </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', borderBottom: '1px solid #1e2a45', paddingBottom: '0' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', borderBottom: '1px solid #1f1f24', paddingBottom: '0' }}>
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               style={{
                 padding: '10px 20px',
-                borderRadius: '10px 10px 0 0',
+                borderRadius: '8px 8px 0 0',
                 border: 'none',
-                background: activeTab === tab.id ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'transparent',
-                color: activeTab === tab.id ? 'white' : '#64748b',
-                fontSize: '13px',
-                fontWeight: '600',
+                background: activeTab === tab.id ? '#ffffff' : 'transparent',
+                color: activeTab === tab.id ? '#000000' : '#a1a1aa',
+                fontSize: '11px',
+                fontWeight: '700',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
                 display: 'flex', alignItems: 'center', gap: '6px',
@@ -235,22 +237,21 @@ export default function SettingsPage() {
             <div style={{ display: 'grid', gap: '24px' }}>
               <SectionLabel>🖼️ Company Logo</SectionLabel>
               <p style={{ fontSize: '13px', color: '#64748b', marginTop: '-16px' }}>
-                Upload your logo to appear on all PDF invoices. Recommended: PNG with transparent background, min 200×200px.
+                Upload your logo to appear on all PDF invoices. Recommended: PNG with transparent background, min 200x200px.
               </p>
 
-              {/* Drop zone */}
               <div
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onClick={() => fileInputRef.current?.click()}
                 style={{
-                  border: `2px dashed ${isDragging ? '#6366f1' : '#2d3a5e'}`,
-                  borderRadius: '16px',
+                  border: `1px dashed ${isDragging ? '#ffffff' : '#1f1f24'}`,
+                  borderRadius: '12px',
                   padding: '48px 24px',
                   textAlign: 'center',
                   cursor: 'pointer',
-                  background: isDragging ? 'rgba(99,102,241,0.08)' : 'rgba(14,22,42,0.5)',
+                  background: isDragging ? 'rgba(255,255,255,0.02)' : '#101012',
                   transition: 'all 0.2s',
                   position: 'relative',
                 }}
@@ -261,15 +262,15 @@ export default function SettingsPage() {
                     <img
                       src={logoPreview}
                       alt="Logo preview"
-                      style={{ maxWidth: '160px', maxHeight: '100px', objectFit: 'contain', borderRadius: '8px', boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }}
+                      style={{ maxWidth: '160px', maxHeight: '100px', objectFit: 'contain', borderRadius: '8px', border: '1px solid #1f1f24' }}
                     />
-                    <p style={{ fontSize: '13px', color: '#94a3b8' }}>Click or drag to replace</p>
+                    <p style={{ fontSize: '12px', color: '#a1a1aa' }}>Click or drag to replace</p>
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); removeLogo(); }}
                       style={{
-                        padding: '6px 16px', borderRadius: '8px', border: '1px solid #ef4444',
-                        background: 'transparent', color: '#ef4444', fontSize: '12px', cursor: 'pointer', fontWeight: '600',
+                        padding: '6px 16px', borderRadius: '6px', border: '1px solid #f43f5e',
+                        background: 'transparent', color: '#f43f5e', fontSize: '11px', cursor: 'pointer', fontWeight: '600',
                       }}
                     >
                       🗑️ Remove Logo
@@ -277,27 +278,27 @@ export default function SettingsPage() {
                   </div>
                 ) : (
                   <div>
-                    <div style={{ fontSize: '48px', marginBottom: '12px' }}>📷</div>
-                    <p style={{ fontSize: '15px', fontWeight: '600', color: '#94a3b8', marginBottom: '6px' }}>
+                    <div style={{ fontSize: '40px', marginBottom: '12px' }}>📷</div>
+                    <p style={{ fontSize: '13px', fontWeight: '600', color: '#a1a1aa', marginBottom: '6px' }}>
                       Drop your logo here or click to browse
                     </p>
-                    <p style={{ fontSize: '12px', color: '#475569' }}>PNG, JPG, WEBP • Max 5MB</p>
+                    <p style={{ fontSize: '11px', color: '#475569' }}>PNG, JPG, WEBP • Max 5MB</p>
                   </div>
                 )}
               </div>
-
+ 
               {/* Logo preview on invoice card */}
               {logoPreview && (
                 <div style={{
-                  background: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.05) 100%)',
-                  border: '1px solid rgba(99,102,241,0.2)',
-                  borderRadius: '12px', padding: '16px 20px',
+                  background: 'rgba(16,185,129,0.05)',
+                  border: '1px solid rgba(16,185,129,0.25)',
+                  borderRadius: '8px', padding: '16px 20px',
                   display: 'flex', alignItems: 'center', gap: '12px',
                 }}>
-                  <span style={{ fontSize: '18px' }}>✅</span>
+                  <span style={{ fontSize: '16px' }}>✅</span>
                   <div>
-                    <p style={{ fontSize: '13px', fontWeight: '600', color: '#a5b4fc' }}>Logo ready!</p>
-                    <p style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                    <p style={{ fontSize: '12px', fontWeight: '650', color: '#10b981' }}>Logo ready!</p>
+                    <p style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
                       Your logo will appear in the top-left corner of every PDF invoice.
                     </p>
                   </div>
@@ -312,15 +313,15 @@ export default function SettingsPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 {/* Currency */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>
+                  <label style={{ display: 'block', fontSize: '10px', fontWeight: '700', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>
                     Default Currency
                   </label>
                   <select
                     value={form.currency}
                     onChange={handleCurrencyChange}
                     style={{
-                      width: '100%', padding: '12px 14px', borderRadius: '10px',
-                      border: '1px solid #2d3a5e', background: '#0f1e3c',
+                      width: '100%', padding: '12px 14px', borderRadius: '8px',
+                      border: '1px solid #1f1f24', background: '#141417',
                       color: '#e2e8f0', fontSize: '14px', cursor: 'pointer',
                       outline: 'none',
                     }}
@@ -330,18 +331,18 @@ export default function SettingsPage() {
                     ))}
                   </select>
                 </div>
-
+ 
                 {/* Payment Terms */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>
+                  <label style={{ display: 'block', fontSize: '10px', fontWeight: '700', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>
                     Default Payment Terms
                   </label>
                   <select
                     value={form.paymentTerms}
                     onChange={(e) => setForm((p) => ({ ...p, paymentTerms: Number(e.target.value) }))}
                     style={{
-                      width: '100%', padding: '12px 14px', borderRadius: '10px',
-                      border: '1px solid #2d3a5e', background: '#0f1e3c',
+                      width: '100%', padding: '12px 14px', borderRadius: '8px',
+                      border: '1px solid #1f1f24', background: '#141417',
                       color: '#e2e8f0', fontSize: '14px', cursor: 'pointer',
                       outline: 'none',
                     }}
@@ -355,7 +356,7 @@ export default function SettingsPage() {
 
               {/* Invoice Prefix */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>
+                <label style={{ display: 'block', fontSize: '10px', fontWeight: '700', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>
                   Invoice Number Prefix
                 </label>
                 <input
@@ -365,35 +366,35 @@ export default function SettingsPage() {
                   placeholder="INV"
                   maxLength={10}
                   style={{
-                    width: '100%', padding: '12px 14px', borderRadius: '10px',
-                    border: '1px solid #2d3a5e', background: '#0f1e3c',
+                    width: '100%', padding: '12px 14px', borderRadius: '8px',
+                    border: '1px solid #1f1f24', background: '#141417',
                     color: '#e2e8f0', fontSize: '14px', outline: 'none',
                     boxSizing: 'border-box',
                   }}
                 />
               </div>
-
+ 
               {/* Preview */}
               <div style={{
-                background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.04) 100%)',
-                border: '1px solid rgba(99,102,241,0.2)',
-                borderRadius: '12px', padding: '20px 24px',
+                background: '#141417',
+                border: '1px solid #1f1f24',
+                borderRadius: '8px', padding: '20px 24px',
               }}>
-                <p style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>
+                <p style={{ fontSize: '10px', fontWeight: '700', color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>
                   Live Preview
                 </p>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                   <div>
-                    <p style={{ fontSize: '11px', color: '#64748b', marginBottom: '2px' }}>Invoice Number</p>
-                    <p style={{ fontSize: '20px', fontWeight: '700', color: '#6366f1', letterSpacing: '1px' }}>{prefixPreview}</p>
+                    <p style={{ fontSize: '10px', color: '#64748b', marginBottom: '2px' }}>Invoice Number</p>
+                    <p style={{ fontSize: '18px', fontWeight: '700', color: '#ffffff', letterSpacing: '1px' }}>{prefixPreview}</p>
                   </div>
                   <div>
-                    <p style={{ fontSize: '11px', color: '#64748b', marginBottom: '2px' }}>Currency</p>
-                    <p style={{ fontSize: '20px', fontWeight: '700', color: '#22c55e' }}>{sym} {form.currency}</p>
+                    <p style={{ fontSize: '10px', color: '#64748b', marginBottom: '2px' }}>Currency</p>
+                    <p style={{ fontSize: '18px', fontWeight: '700', color: '#10b981' }}>{sym} {form.currency}</p>
                   </div>
                   <div>
-                    <p style={{ fontSize: '11px', color: '#64748b', marginBottom: '2px' }}>Payment Terms</p>
-                    <p style={{ fontSize: '20px', fontWeight: '700', color: '#f59e0b' }}>Net {form.paymentTerms}</p>
+                    <p style={{ fontSize: '10px', color: '#64748b', marginBottom: '2px' }}>Payment Terms</p>
+                    <p style={{ fontSize: '18px', fontWeight: '700', color: '#f59e0b' }}>Net {form.paymentTerms}</p>
                   </div>
                 </div>
               </div>
@@ -417,10 +418,11 @@ export default function SettingsPage() {
                 toast('Changes discarded.', { icon: '↩️' });
               }}
               style={{
-                padding: '12px 24px', borderRadius: '10px', border: '1px solid #2d3a5e',
-                background: 'transparent', color: '#64748b', fontSize: '14px', fontWeight: '600',
-                cursor: 'pointer', transition: 'all 0.2s',
+                padding: '12px 24px', borderRadius: '8px', border: '1px solid #1f1f24',
+                background: 'transparent', color: '#a1a1aa', fontSize: '12px', fontWeight: '700',
+                cursor: 'pointer', transition: 'all 0.2s', textTransform: 'uppercase', letterSpacing: '0.5px'
               }}
+              className="hover:bg-dark-600 hover:text-white"
             >
               Discard Changes
             </button>
@@ -428,14 +430,15 @@ export default function SettingsPage() {
               type="submit"
               disabled={saving}
               style={{
-                padding: '12px 32px', borderRadius: '10px', border: 'none',
-                background: saving ? '#374151' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                color: 'white', fontSize: '14px', fontWeight: '700',
+                padding: '12px 32px', borderRadius: '8px', border: 'none',
+                background: saving ? '#141417' : '#ffffff',
+                color: saving ? '#71717a' : '#000000', fontSize: '12px', fontWeight: '700',
                 cursor: saving ? 'not-allowed' : 'pointer',
-                boxShadow: saving ? 'none' : '0 4px 20px rgba(99,102,241,0.5)',
                 transition: 'all 0.2s',
                 display: 'flex', alignItems: 'center', gap: '8px',
+                textTransform: 'uppercase', letterSpacing: '0.5px'
               }}
+              className={saving ? '' : 'hover:bg-neutral-200'}
             >
               {saving ? '⏳ Saving...' : '💾 Save Settings'}
             </button>
@@ -445,20 +448,20 @@ export default function SettingsPage() {
     </Layout>
   );
 }
-
+ 
 // ── Helper components ──────────────────────────────
 function SectionLabel({ children }) {
   return (
-    <p style={{ fontSize: '12px', fontWeight: '700', color: '#6366f1', textTransform: 'uppercase', letterSpacing: '1px', margin: '8px 0 -8px' }}>
+    <p style={{ fontSize: '10px', fontWeight: '700', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '1px', margin: '8px 0 -8px' }}>
       {children}
     </p>
   );
 }
-
+ 
 function Field({ label, id, name, value, onChange, placeholder, required, type = 'text' }) {
   return (
     <div>
-      <label htmlFor={id} style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>
+      <label htmlFor={id} style={{ display: 'block', fontSize: '10px', fontWeight: '700', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>
         {label}
       </label>
       <input
@@ -470,13 +473,13 @@ function Field({ label, id, name, value, onChange, placeholder, required, type =
         placeholder={placeholder}
         required={required}
         style={{
-          width: '100%', padding: '12px 14px', borderRadius: '10px',
-          border: '1px solid #2d3a5e', background: '#0f1e3c',
+          width: '100%', padding: '12px 14px', borderRadius: '8px',
+          border: '1px solid #1f1f24', background: '#141417',
           color: '#e2e8f0', fontSize: '14px', outline: 'none',
           boxSizing: 'border-box', transition: 'border-color 0.2s',
         }}
-        onFocus={(e) => (e.target.style.borderColor = '#6366f1')}
-        onBlur={(e) => (e.target.style.borderColor = '#2d3a5e')}
+        onFocus={(e) => (e.target.style.borderColor = '#2a2a32')}
+        onBlur={(e) => (e.target.style.borderColor = '#1f1f24')}
       />
     </div>
   );

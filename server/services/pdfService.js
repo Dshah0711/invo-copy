@@ -215,6 +215,13 @@ const generateInvoiceHTML = (invoice, user, template = 'modern') => {
 };
 
 const generateInvoicePDF = async (invoice, user) => {
+  // On memory-constrained environments like Render Free Tier, Puppeteer can cause OOM crashes.
+  // We default to PDFKit in production or if DISABLE_PUPPETEER is set.
+  if (process.env.DISABLE_PUPPETEER === 'true' || process.env.NODE_ENV === 'production') {
+    console.log('📄 Using PDFKit fallback engine for PDF generation.');
+    return generatePDFKitFallback(invoice, user);
+  }
+
   const html = generateInvoiceHTML(invoice, user, invoice.template);
 
   try {

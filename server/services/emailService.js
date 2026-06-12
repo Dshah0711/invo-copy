@@ -10,10 +10,20 @@ const emailConfigured =
 let transporter = null;
 if (emailConfigured) {
   transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // true for 465, false for other ports
     auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
   });
-  console.log('📧 Email service configured:', process.env.EMAIL_USER);
+  
+  // Verify connection configuration on startup
+  transporter.verify((error, success) => {
+    if (error) {
+      console.error('❌ Email service configuration error:', error);
+    } else {
+      console.log('📧 Email service ready & configured:', process.env.EMAIL_USER);
+    }
+  });
 } else {
   console.log('⚠️  Email not configured — email features disabled. Set EMAIL_USER & EMAIL_PASS in .env to enable.');
 }
@@ -94,19 +104,24 @@ const sendInvoiceEmail = async ({ to, clientName, invoiceNumber, total, dueDate,
   </body>
   </html>`;
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM || `InvoAI <${process.env.EMAIL_USER}>`,
-    to,
-    subject: `Invoice ${invoiceNumber} from ${senderCompany || senderName} — Due ${formatDate(dueDate)}`,
-    html,
-    attachments: [
-      {
-        filename: `${invoiceNumber}.pdf`,
-        content: pdfBuffer,
-        contentType: 'application/pdf',
-      },
-    ],
-  });
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM || `InvoAI <${process.env.EMAIL_USER}>`,
+      to,
+      subject: `Invoice ${invoiceNumber} from ${senderCompany || senderName} — Due ${formatDate(dueDate)}`,
+      html,
+      attachments: [
+        {
+          filename: `${invoiceNumber}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf',
+        },
+      ],
+    });
+  } catch (error) {
+    console.error('❌ Failed to send invoice email:', error);
+    throw new Error(`Email sending failed: ${error.message}`);
+  }
 };
 
 // Send overdue reminder email
@@ -143,12 +158,17 @@ const sendOverdueReminderEmail = async ({ to, clientName, invoiceNumber, total, 
   </body>
   </html>`;
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM || `InvoAI <${process.env.EMAIL_USER}>`,
-    to,
-    subject: `⚠️ Payment Overdue: ${invoiceNumber} — ${formatCurrency(total, currencySymbol)}`,
-    html,
-  });
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM || `InvoAI <${process.env.EMAIL_USER}>`,
+      to,
+      subject: `⚠️ Payment Overdue: ${invoiceNumber} — ${formatCurrency(total, currencySymbol)}`,
+      html,
+    });
+  } catch (error) {
+    console.error('❌ Failed to send overdue reminder email:', error);
+    throw new Error(`Overdue email sending failed: ${error.message}`);
+  }
 };
 
 // Send payment receipt email after successful payment
@@ -233,8 +253,11 @@ const sendPaymentReceiptEmail = async ({ to, clientName, invoiceNumber, total, c
     ];
   }
 
-  await transporter.sendMail(mailOptions);
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error('❌ Failed to send payment receipt email:', error);
+  }
 };
 
 module.exports = { sendInvoiceEmail, sendOverdueReminderEmail, sendPaymentReceiptEmail };
-

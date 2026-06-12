@@ -14,6 +14,7 @@ if (emailConfigured) {
     port: 465,
     secure: true, // true for 465, false for other ports
     auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    family: 4, // Force IPv4 to avoid ENETUNREACH errors on hosts without IPv6 support
   });
   
   // Verify connection configuration on startup

@@ -1,5 +1,12 @@
 // Trigger reload to load .env changes
 require('dotenv').config();
+
+// Force DNS resolution to prefer IPv4 (helps resolve ENETUNREACH on platforms without IPv6 support like Render)
+const dns = require('dns');
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');

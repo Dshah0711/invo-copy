@@ -23,6 +23,9 @@ const paymentRoutes = require('./routes/paymentRoutes');
 
 const app = express();
 
+// Trust reverse proxy (Render, Vercel, Heroku, etc.)
+app.set('trust proxy', 1);
+
 // Connect Database
 connectDB();
 
